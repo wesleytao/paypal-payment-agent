@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal Merchant Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 30px auto;
+            gap: 20px;
+        }
+        
+        .debug-panel {
+            width: 30%;
+            height: 600px;
+            background-color: #212529;
+            color: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .debug-header {
+            background-color: #343a40;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #495057;
+        }
+        
+        .debug-content {
+            height: 100%;
+            overflow-y: auto;
+            padding: 15px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #495057;
+            padding-bottom: 10px;
+        }
+        
+        .log-timestamp {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        
+        .log-type {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-right: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .log-type-info {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .log-type-reasoning {
+            background-color: #6f42c1;
+            color: white;
+        }
+        
+        .log-type-action {
+            background-color: #198754;
+            color: white;
+        }
+        
+        .log-type-error {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .log-type-api {
+            background-color: #fd7e14;
+            color: white;
+        }
+        
+        .log-message {
+            margin-top: 5px;
+            word-wrap: break-word;
+        }
+        
+        .chat-section {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-container {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .chat-header {
+            background-color: #0070ba;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chat-header img {
+            width: 30px;
+            margin-right: 10px;
+        }
+        
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: white;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            display: inline-block;
+        }
+        
+        .user-message {
+            align-items: flex-end;
+        }
+        
+        .user-message .message-content {
+            background-color: #0070ba;
+            color: white;
+        }
+        
+        .agent-message {
+            align-items: flex-start;
+        }
+        
+        .agent-message .message-content {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #f1f1f1;
+        }
+        
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 30px;
+            margin-right: 10px;
+            outline: none;
+        }
+        
+        .chat-input button {
+            background-color: #0070ba;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .chat-input button:hover {
+            background-color: #003087;
+        }
+        
+        .auth-panel {
+            padding: 20px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .auth-panel h3 {
+            margin-bottom: 20px;
+            color: #0070ba;
+        }
+        
+        .transaction {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .positive {
+            color: #28a745;
+        }
+        
+        .negative {
+            color: #dc3545;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- Debug Panel -->
+            <div class="debug-panel">
+                <div class="debug-header">
+                    Agent Debug Log
+                </div>
+                <div class="debug-content" id="debugLog">
+                    <div class="log-entry">
+                        <span class="log-timestamp">2025-03-08 15:53:15</span>
+                        <div>
+                            <span class="log-type log-type-info">INIT</span>
+                            <span>PayPal Agent initialized</span>
+                        </div>
+                        <div class="log-message">Waiting for user input...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Section -->
+            <div class="chat-section">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal Logo">
+                        PayPal Merchant Assistant
+                    </div>
+                    
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be added here -->
+                        <div class="message agent-message">
+                            <div class="message-content">
+                                Hello! I'm your PayPal Merchant Assistant. I can help you send money, check your balance, and view your transaction history. What would you like to do today?
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
+                        <button id="sendButton">
+                            <span id="buttonText">Send</span>
+                            <span id="loadingSpinner" class="loading-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="auth-panel">
+                    <h3>Authentication</h3>
+                    <div class="alert alert-info">
+                        For this demo, you would normally authenticate with PayPal. For now, just provide your API credentials below.
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientId" class="form-label">PayPal Client ID</label>
+                        <input type="text" class="form-control" id="clientId" placeholder="Enter your PayPal Client ID">
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientSecret" class="form-label">PayPal Client Secret</label>
+                        <input type="password" class="form-control" id="clientSecret" placeholder="Enter your PayPal Client Secret">
+                    </div>
+                    <button class="btn btn-primary" id="authenticateButton">Authenticate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chatMessages');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const buttonText = document.getElementById('buttonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const authenticateButton = document.getElementById('authenticateButton');
+            const clientIdInput = document.getElementById('clientId');
+            const clientSecretInput = document.getElementById('clientSecret');
+            const debugLog = document.getElementById('debugLog');
+            
+            let isAuthenticated = false;
+            
+            // Function to add a log entry to the debug panel
+            function addLogEntry(type, message, details = null) {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                
+                const now = new Date();
+                const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                const logTimestamp = document.createElement('span');
+                logTimestamp.className = 'log-timestamp';
+                logTimestamp.textContent = timestamp;
+                
+                const logTypeContainer = document.createElement('div');
+                
+                const logType = document.createElement('span');
+                logType.className = `log-type log-type-${type.toLowerCase()}`;
+                logType.textContent = type.toUpperCase();
+                
+                const logTypeText = document.createTextNode(` ${message}`);
+                
+                logTypeContainer.appendChild(logType);
+                logTypeContainer.appendChild(logTypeText);
+                
+                logEntry.appendChild(logTimestamp);
+                logEntry.appendChild(logTypeContainer);
+                
+                if (details) {
+                    const logMessage = document.createElement('div');
+                    logMessage.className = 'log-message';
+                    
+                    if (typeof details === 'object') {
+                        logMessage.textContent = JSON.stringify(details, null, 2);
+                    } else {
+                        logMessage.textContent = details;
+                    }
+                    
+                    logEntry.appendChild(logMessage);
+                }
+                
+                debugLog.appendChild(logEntry);
+                
+                // Scroll to the bottom
+                debugLog.scrollTop = debugLog.scrollHeight;
+            }
+            
+            // Function to add a message to the chat
+            function addMessage(content, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user-message' : 'agent-message'}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = content;
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = 'Just now';
+                
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(timeDiv);
+                
+                chatMessages.appendChild(messageDiv);
+                
+                // Scroll to the bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Function to render transaction history
+            function renderTransactions(transactions) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message agent-message';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                
+                let html = '<div class="transactions">';
+                transactions.forEach(transaction => {
+                    const amountClass = transaction.amount >= 0 ? 'positive' : 'negative';
+                    html += `
+                        <div class="transaction">
+                            <div><strong>${transaction.description}</strong></div>
+                            <div>Date: ${transaction.date}</div>
+                            <div>Status: ${transaction.status}</div>
+                            <div class="${amountClass}">Amount: $${Math.abs(transaction.amount).toFixed(2)} ${transaction.amount >= 0 ? '(received)' : '(sent)'}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                contentDiv.innerHTML = html;
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = 'Just now';
+                
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(timeDiv);
+                
+                chatMessages.appendChild(messageDiv);
+                
+                // Scroll to the bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Function to send a message
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                
+                if (message === '') return;
+                
+                // Add user message to chat
+                addMessage(message, true);
+                
+                // Add log entry for user message
+                addLogEntry('info', 'User message received', message);
+                
+                // Clear input
+                userInput.value = '';
+                
+                // Show loading spinner
+                buttonText.style.display = 'none';
+                loadingSpinner.style.display = 'inline-block';
+                sendButton.disabled = true;
+                
+                try {
+                    // Log the reasoning process
+                    addLogEntry('reasoning', 'Processing user input');
+                    
+                    // Log the API call
+                    addLogEntry('api', 'Sending request to /api/chat');
+                    
+                    // Send message to server
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Log the API response
+                    addLogEntry('api', 'Received response from /api/chat', data);
+                    
+                    if (data.status === 'success') {
+                        const agentResponse = data.response;
+                        
+                        // Log the action taken
+                        addLogEntry('action', `Executing action: ${agentResponse.type}`);
+                        
+                        // Add agent response to chat
+                        addMessage(agentResponse.message);
+                        
+                        // If there are transactions to display
+                        if (agentResponse.type === 'success' && 
+                            agentResponse.details && 
+                            agentResponse.details.transactions) {
+                            renderTransactions(agentResponse.details.transactions);
+                            addLogEntry('info', 'Rendering transaction history', { count: agentResponse.details.transactions.length });
+                        }
+                    } else {
+                        // Log the error
+                        addLogEntry('error', 'Error processing request', data.error);
+                        
+                        // Add error message to chat
+                        addMessage('Sorry, there was an error processing your request. Please try again.');
+                    }
+                } catch (error) {
+                    // Log the error
+                    addLogEntry('error', 'Error connecting to server', error.toString());
+                    
+                    // Add error message to chat
+                    addMessage('Sorry, there was an error connecting to the server. Please try again.');
+                }
+                
+                // Hide loading spinner
+                buttonText.style.display = 'inline-block';
+                loadingSpinner.style.display = 'none';
+                sendButton.disabled = false;
+            }
+            
+            // Function to authenticate with PayPal
+            async function authenticate() {
+                const clientId = clientIdInput.value.trim();
+                const clientSecret = clientSecretInput.value.trim();
+                
+                if (clientId === '' || clientSecret === '') {
+                    alert('Please enter both Client ID and Client Secret');
+                    return;
+                }
+                
+                // Log authentication attempt
+                addLogEntry('info', 'Authentication attempt', { client_id: clientId });
+                
+                authenticateButton.disabled = true;
+                authenticateButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Authenticating...';
+                
+                try {
+                    // Log API call
+                    addLogEntry('api', 'Sending request to /api/authenticate');
+                    
+                    const response = await fetch('/api/authenticate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ client_id: clientId, client_secret: clientSecret })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Log API response
+                    addLogEntry('api', 'Received response from /api/authenticate', { status: data.status });
+                    
+                    if (data.status === 'success') {
+                        isAuthenticated = true;
+                        
+                        // Log success
+                        addLogEntry('action', 'Authentication successful');
+                        
+                        // Add success message to chat
+                        addMessage('Authentication successful! You can now use all PayPal features.');
+                        
+                        // Update authentication panel
+                        document.querySelector('.auth-panel').innerHTML = '<div class="alert alert-success">You are authenticated with PayPal!</div>';
+                    } else {
+                        // Log error
+                        addLogEntry('error', 'Authentication failed', data.error);
+                        
+                        alert('Authentication failed: ' + data.error);
+                        authenticateButton.disabled = false;
+                        authenticateButton.textContent = 'Authenticate';
+                    }
+                } catch (error) {
+                    // Log error
+                    addLogEntry('error', 'Error connecting to server', error.toString());
+                    
+                    alert('Error connecting to the server. Please try again.');
+                    authenticateButton.disabled = false;
+                    authenticateButton.textContent = 'Authenticate';
+                }
+            }
+            
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            
+            userInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            authenticateButton.addEventListener('click', authenticate);
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -2,6 +2,18 @@
 
 A conversational agent that uses the ReAct framework to process natural language payment instructions and execute them through the PayPal API.
 
+## User Interface
+
+### Main Chat Interface
+![PayPal Merchant Assistant UI](images/UI1.png)
+
+*The PayPal Merchant Assistant provides a chat interface for managing PayPal transactions and checking account information using the PayPal REST API in sandbox mode.*
+
+### Debug Information Panel
+![PayPal Merchant Assistant Debug Panel](images/UI2.png)
+
+*The debug panel shows detailed information about API calls, including endpoints, parameters, and responses.*
+
 ## Features
 
 - **Natural Language Processing**: Understand and process user commands like "send $20 to Alex" or "check my balance"

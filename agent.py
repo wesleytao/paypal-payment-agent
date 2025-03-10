@@ -708,8 +708,9 @@ class PayPalAgent:
             logger.info("Fetching transaction history using PayPal API")
             
             # Set up date range (last 30 days)
+            from datetime import timedelta
             end_date = datetime.now()
-            start_date = end_date - datetime.timedelta(days=30)
+            start_date = end_date - timedelta(days=30)
             
             # Format dates for API
             start_date_str = start_date.strftime("%Y-%m-%dT00:00:00Z")

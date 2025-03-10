@@ -1,6 +1,6 @@
 # PayPal Merchant Assistant
 
-A conversational agent that uses the ReAct framework to process natural language payment instructions and execute them through the PayPal API.
+A conversational agent that uses the ReAct pattern to process natural language payment instructions and execute them through the PayPal API in **sandbox mode only**.
 
 ## User Interface
 
@@ -16,10 +16,13 @@ A conversational agent that uses the ReAct framework to process natural language
 
 ## Features
 
+- **Enhanced ReAct Pattern**: Implements a reasoning and acting loop that allows for multiple function calls in sequence
+- **Strict Sandbox Mode**: All PayPal API operations are strictly limited to sandbox mode with clear logging
 - **Natural Language Processing**: Understand and process user commands like "send $20 to Alex" or "check my balance"
 - **Autonomous API Selection**: The agent automatically decides which PayPal API to call based on the user's input
-- **Chat Interface**: User-friendly chat interface for interacting with the agent
+- **Chat Interface**: User-friendly chat interface with real-time feedback on API operations
 - **Core PayPal Operations**: Support for sending money, checking balance, and viewing transaction history
+- **Comprehensive Logging**: Two-tiered logging system with DEBUG logs for terminal and INFO logs for both terminal and UI
 
 ## Requirements
 
@@ -58,15 +61,26 @@ A conversational agent that uses the ReAct framework to process natural language
 
 ## How It Works
 
-The agent uses a ReAct (Reasoning + Acting) framework:
+The agent uses an enhanced ReAct (Reasoning + Acting) pattern:
 
-1. **Reasoning**: Parses user input to understand intent and extract entities
-2. **Acting**: Translates the parsed information into PayPal API calls
-3. **Feedback**: Provides feedback to the user on the success or failure of their request
+1. **Reasoning**: The LLM analyzes user input to understand intent and required actions
+2. **Acting**: The agent executes PayPal API calls (in sandbox mode only) based on the LLM's reasoning
+3. **Observation**: Results from API calls are fed back to the LLM for further reasoning
+4. **Iteration**: The agent can make multiple function calls in sequence (up to 3) to complete complex tasks
+5. **Response**: Provides a comprehensive response based on all API interactions
+
+All operations are clearly marked with `[SANDBOX]` in logs to emphasize that they are running in sandbox mode only.
 
 ## Security Note
 
-This application handles sensitive financial information. In a production environment, additional security measures would be needed:
+This application is designed to operate **exclusively in sandbox mode** and should never be used with real PayPal accounts or transactions. Key security features include:
+
+- **Sandbox-Only Operations**: All PayPal API calls are restricted to sandbox mode
+- **Environment Variable Protection**: API keys and credentials are stored in `.env` files (excluded from git)
+- **Clear Logging**: All PayPal operations are clearly marked with `[SANDBOX]` in logs
+- **Function Call Limits**: Maximum of 3 function calls per user request to prevent abuse
+
+Additional security measures for a production environment would include:
 - Secure user authentication
 - API request validation
 - Rate limiting
@@ -76,6 +90,15 @@ This application handles sensitive financial information. In a production enviro
 ## Development
 
 To extend this agent:
-1. Add new intent patterns in the `_parse_message` method
-2. Create corresponding action methods
-3. Update the `_execute_action` method to call the new actions
+
+1. **Add New Functions**: Register new functions in the `FunctionRegistry` class
+2. **Update Function Schemas**: Add appropriate JSON schemas for new functions
+3. **Implement Function Logic**: Create the actual function implementation in the appropriate adapter
+4. **Update System Prompt**: Modify the system prompt in `config/settings.py` if needed
+
+### Recent Enhancements
+
+1. **ReAct Pattern Implementation**: Enhanced the agent to support multiple function calls in sequence
+2. **Improved Logging**: Added comprehensive logging with `[SANDBOX]` prefix for all PayPal operations
+3. **Conversation Management**: Updated the conversation history handling to properly support function calls
+4. **Error Handling**: Improved error handling during function execution with user-friendly messages

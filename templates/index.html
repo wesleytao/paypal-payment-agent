@@ -44,6 +44,10 @@
             padding: 15px;
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.9rem;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
         
         .log-entry {
@@ -471,19 +475,40 @@
                         // Add agent response to chat
                         addMessage(agentResponse.message);
                         
+                        // Display agent logs if available
+                        if (agentResponse.agent_logs && agentResponse.agent_logs.length > 0) {
+                            agentResponse.agent_logs.forEach(log => {
+                                addLogEntry('info', log);
+                            });
+                        }
+                        
                         // If there are transactions to display
-                        if (agentResponse.type === 'success' && 
+                        if (agentResponse.type === 'transaction_history' && 
                             agentResponse.details && 
                             agentResponse.details.transactions) {
                             renderTransactions(agentResponse.details.transactions);
                             addLogEntry('info', 'Rendering transaction history', { count: agentResponse.details.transactions.length });
                         }
+                        
+                        // If there is balance to display
+                        if (agentResponse.type === 'balance' &&
+                            agentResponse.details &&
+                            agentResponse.details.balance) {
+                            addLogEntry('info', 'Displaying balance information', agentResponse.details.balance);
+                        }
                     } else {
                         // Log the error
                         addLogEntry('error', 'Error processing request', data.error);
                         
-                        // Add error message to chat
-                        addMessage('Sorry, there was an error processing your request. Please try again.');
+                        // Display agent logs if available (even in error case)
+                        if (data.agent_logs && data.agent_logs.length > 0) {
+                            data.agent_logs.forEach(log => {
+                                addLogEntry('info', log);
+                            });
+                        }
+                        
+                        // Add detailed error message to chat
+                        addMessage(`Error: ${data.error}\n\nPlease check your API keys in the .env file. Make sure your OpenAI API key is valid and set correctly for the PayPal sandbox environment.`);
                     }
                 } catch (error) {
                     // Log the error

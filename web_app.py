@@ -172,6 +172,27 @@ def authenticate():
             "error": str(e)
         })
 
+@app.route('/api/reset', methods=['POST'])
+def reset_conversation():
+    """Reset the conversation history."""
+    try:
+        # Reset the agent's conversation history
+        paypal_agent.conversation.clear()
+        
+        logger.info("[SANDBOX] Conversation history has been reset")
+        
+        return jsonify({
+            "status": "success",
+            "message": "Conversation has been reset"
+        })
+    
+    except Exception as e:
+        logger.error(f"Error resetting conversation: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        })
+
 if __name__ == '__main__':
     # Parse command line arguments
     import argparse
